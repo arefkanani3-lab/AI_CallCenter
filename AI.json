@@ -1,0 +1,909 @@
+{
+  "name": "AI Real Estate Call Center - Final",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vapi-function",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "5fea2381-8312-4d72-bfe8-dded96d7bc58",
+      "name": "VAPI Function Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -720,
+        224
+      ],
+      "webhookId": "vapi-function-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst message = body.message || {};\nconst toolCalls = message.toolCalls || message.functionCall ? [message.functionCall] : [];\n\nlet functionName = '';\nlet args = {};\nlet toolCallId = '';\n\nif (message.toolCalls && message.toolCalls.length > 0) {\n  const tc = message.toolCalls[0];\n  functionName = tc.function?.name || '';\n  args = typeof tc.function?.arguments === 'string' ? JSON.parse(tc.function.arguments) : (tc.function?.arguments || {});\n  toolCallId = tc.id || '';\n} else if (message.functionCall) {\n  functionName = message.functionCall.name || '';\n  args = message.functionCall.parameters || {};\n}\n\nreturn [{\n  json: {\n    function: functionName,\n    args: args,\n    toolCallId: toolCallId,\n    callId: message.call?.id || '',\n    customer: message.call?.customer || {}\n  }\n}];"
+      },
+      "id": "156a7f5b-714e-4701-b63e-f1cf5f73e0c3",
+      "name": "Parse VAPI Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.function }}",
+                    "rightValue": "searchProperty",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "33ec2291-0227-4133-99e5-de8854788bff"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "searchProperty"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.function }}",
+                    "rightValue": "checkClient",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ee722f6c-b150-4133-8455-9745843c793e"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "checkClient"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.function }}",
+                    "rightValue": "bookViewing",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "efe14304-7bfc-4489-b2d7-0733977f37f8"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "bookViewing"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5cef4ee3-0ad0-4442-bb0c-40e5b9b55424",
+      "name": "Route Function",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -240,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "=https://docs.google.com/spreadsheets/d/1H-tgpjJ1xxL2kcbINE0GEZiDxn7MrWRcyKClv8dM_-c/edit?gid=2082232142#gid=2082232142",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Properties",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1H-tgpjJ1xxL2kcbINE0GEZiDxn7MrWRcyKClv8dM_-c/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "1a45e722-167c-40f9-8864-dd015e7aa3d2",
+      "name": "Search Properties",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        16,
+        0
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "4TSbHgGWwXZuOUPr",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "=https://docs.google.com/spreadsheets/d/1H-tgpjJ1xxL2kcbINE0GEZiDxn7MrWRcyKClv8dM_-c/edit?gid=2082232142#gid=2082232142",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 517321525,
+          "mode": "list",
+          "cachedResultName": "Clients",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1H-tgpjJ1xxL2kcbINE0GEZiDxn7MrWRcyKClv8dM_-c/edit#gid=517321525"
+        },
+        "options": {}
+      },
+      "id": "77e660c9-f212-4506-9c8c-edabb2380bd9",
+      "name": "Check Client",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        16,
+        224
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "4TSbHgGWwXZuOUPr",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "primary",
+          "mode": "list"
+        },
+        "start": "={{ $json.args.datetime }}",
+        "end": "={{ DateTime.fromISO($json.args.datetime).plus({hours: 1}).toISO() }}",
+        "additionalFields": {
+          "description": "=Client: {{ $json.args.client_name }}\nPhone: {{ $json.args.phone }}\nProperty: {{ $json.args.property_id }}",
+          "summary": "=Property Viewing - {{ $json.args.client_name }}"
+        }
+      },
+      "id": "280ef80a-ed85-4015-8f3f-3c553c9ed7f5",
+      "name": "Book Viewing in Calendar",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        16,
+        448
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "OEvbEXVGSP4p71nN",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst toolCallId = $('Parse VAPI Request').first().json.toolCallId;\n\nconst properties = items.map(i => ({\n  id: i.json.Propert_Id,\n  title: i.json.Title,\n  price: i.json.PRICE,\n  bedrooms: i.json.Bedroom,\n  location: i.json.LOCATION\n}));\n\nconst result = properties.length > 0\n  ? \"Found \" + properties.length + \" properties: \" + properties.map(p => p.title + \" with \" + p.bedrooms + \" bedrooms, price: \" + p.price + \" in \" + p.location).join(\"; \")\n  : \"No properties found matching your criteria\";\n\nreturn [{\n  json: {\n    results: [{\n      toolCallId: toolCallId,\n      result: result\n    }]\n  }\n}];"
+      },
+      "id": "91e2c63e-181b-4993-87b8-8ecc673d9f3e",
+      "name": "Format Property Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst toolCallId = $('Parse VAPI Request').first().json.toolCallId;\n\nconst exists = item && item.client_id;\nconst result = exists\n  ? `Client found: ${item.name}, Status: ${item.status}, Budget: ${item.budget_min}-${item.budget_max}`\n  : 'New client - not in database';\n\nreturn [{\n  json: {\n    results: [{\n      toolCallId: toolCallId,\n      result: result\n    }]\n  }\n}];"
+      },
+      "id": "d7cceecd-bbea-4a9e-a66a-e506f8e2db8a",
+      "name": "Format Client Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst toolCallId = $('Parse VAPI Request').first().json.toolCallId;\n\nconst result = item.id\n  ? `Viewing booked successfully for ${item.start?.dateTime || 'scheduled time'}. Confirmation ID: ${item.id}`\n  : 'Booking failed - please try another time';\n\nreturn [{\n  json: {\n    results: [{\n      toolCallId: toolCallId,\n      result: result\n    }]\n  }\n}];"
+      },
+      "id": "61d665d3-96e7-4a7d-b6b1-cf7419071afb",
+      "name": "Format Booking Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "32e2aa83-5b45-4c25-8d11-84cbc939d3e5",
+      "name": "Respond to VAPI",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        544,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vapi-end-call",
+        "responseMode": "onReceived",
+        "responseCode": 200,
+        "options": {}
+      },
+      "id": "af7a9b99-f6ca-46f3-bf61-b3aacc84346d",
+      "name": "VAPI End-Call Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -880,
+        800
+      ],
+      "webhookId": "vapi-end-call-webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "filter-end-call-report",
+              "leftValue": "={{ $json.body?.message?.type || $json.message?.type }}",
+              "rightValue": "end-of-call-report",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter_vapi_events_node_123",
+      "name": "Filter End Call Report",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -660,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst message = body.message || {};\nconst call = message.call || {};\nconst customer = call.customer || message.customer || {};\n\nconst phoneNumber = customer.number || call.phone_number || message.artifact?.callerNumber || 'Unknown';\n\nreturn [{\n  json: {\n    call_id: call.id || '',\n    client_name: customer.name || 'Unknown',\n    phone: phoneNumber,\n    call_date: new Date().toISOString(),\n    duration: message.durationSeconds || 0,\n    transcript: message.transcript || message.artifact?.transcript || '',\n    summary_raw: message.summary || ''\n  }\n}];"
+      },
+      "id": "cda38b49-54bd-4eff-935f-7c0a4f31b547",
+      "name": "Extract Call Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"model\": \"openai/gpt-4o-mini\",\n    \"messages\": [\n      {\n        \"role\": \"system\",\n        \"content\": \"You are a real estate lead analyzer. Analyze the call transcript and respond ONLY with valid JSON in this exact format: {\\\"sentiment\\\": \\\"positive|neutral|negative\\\", \\\"lead_score\\\": 1-10, \\\"is_hot\\\": true|false, \\\"summary\\\": \\\"brief summary\\\", \\\"next_action\\\": \\\"recommended action\\\"}. is_hot is true if lead_score >= 7.\"\n      },\n      {\n        \"role\": \"user\",\n        \"content\": \"Transcript: \" + $json.transcript\n      }\n    ],\n    \"response_format\": {\"type\": \"json_object\"}\n  }\n}}",
+        "options": {}
+      },
+      "id": "203fca43-cd61-4d6c-a00a-fa11e2fbf076",
+      "name": "GPT Lead Analysis (OpenRouter)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -240,
+        800
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "kmEgbBmy35Ol2fm6",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const callData = $('Extract Call Data').first().json;\nconst aiResponse = $input.first().json;\n\nlet analysis = {};\ntry {\n  const content = aiResponse.choices?.[0]?.message?.content || '{}';\n  analysis = typeof content === 'string' ? JSON.parse(content) : content;\n} catch(e) {\n  analysis = { sentiment: 'neutral', lead_score: 5, is_hot: false, summary: 'Parse error', next_action: 'Manual review' };\n}\n\nreturn [{\n  json: {\n    call_id: callData.call_id,\n    client_name: callData.client_name,\n    phone: callData.phone,\n    call_date: callData.call_date,\n    duration: callData.duration,\n    transcript: callData.transcript,\n    sentiment: analysis.sentiment || 'neutral',\n    lead_score: analysis.lead_score || 5,\n    is_hot: analysis.is_hot || false,\n    summary: analysis.summary || '',\n    next_action: analysis.next_action || '',\n    follow_up_date: new Date(Date.now() + 3*24*60*60*1000).toISOString().split('T')[0]\n  }\n}];"
+      },
+      "id": "ad21653f-51de-4fcb-a6b6-95aa8db15d6a",
+      "name": "Merge Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "=1H-tgpjJ1xxL2kcbINE0GEZiDxn7MrWRcyKClv8dM_-c",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2082232142,
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1H-tgpjJ1xxL2kcbINE0GEZiDxn7MrWRcyKClv8dM_-c/edit#gid=2082232142"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "call_id": "={{ $json.call_id }}",
+            "client_name": "={{ $json.client_name }}",
+            "phone": "={{ $json.phone }}",
+            "call_date": "={{ $json.call_date }}",
+            "duration": "={{ $json.duration }}",
+            "next_action": "={{ $json.next_action }}",
+            "summary": "={{ $json.summary }}",
+            "is_hot": "={{ $json.is_hot }}",
+            "lead_score": "={{ $json.lead_score }}",
+            "sentiment": "={{ $json.sentiment }}",
+            "transcript": "={{ $json.transcript }}",
+            "follow_up_date": "={{ $json.follow_up_date }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "call_id",
+              "displayName": "call_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "client_name",
+              "displayName": "client_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "call_date",
+              "displayName": "call_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "duration",
+              "displayName": "duration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "next_action",
+              "displayName": "next_action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_hot",
+              "displayName": "is_hot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lead_score",
+              "displayName": "lead_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sentiment",
+              "displayName": "sentiment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "transcript",
+              "displayName": "transcript",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "follow_up_date",
+              "displayName": "follow_up_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "f95c8ad8-3b5a-45d5-bad8-517ea41be453",
+      "name": "Save to CRM Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        416,
+        800
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "4TSbHgGWwXZuOUPr",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.is_hot }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "id": "f0e78272-fe75-4f7c-ae97-8c264556e007"
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "7bdbc693-ea9e-4507-b8ef-79def627dd77",
+      "name": "Is Hot Lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "71836980",
+        "text": "=🔥 *HOT LEAD ALERT!*\n\n👤 *Name:* {{ $json.client_name }}\n📞 *Phone:* {{ $json.phone }}\n⭐ *Score:* {{ $json.lead_score }}/10\n😊 *Sentiment:* {{ $json.sentiment }}\n\n📝 *Summary:*\n{{ $json.summary }}\n\n✅ *Next Action:*\n{{ $json.next_action }}\n\n📅 *Follow-up:* {{ $json.follow_up_date }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "757fb879-8d7b-409d-bbd8-efb96682b63d",
+      "name": "Telegram Hot Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        848,
+        688
+      ],
+      "webhookId": "d3096b5b-fe13-4bc8-8096-bcdc1cbed193",
+      "credentials": {
+        "telegramApi": {
+          "id": "TsNMAVjS6oD04DjC",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v18.0/1115720234957320/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $json.phone }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"Hi {{ $json.client_name }}, thank you for your call! We'll be in touch soon with property options matching your needs.\"\n  }\n}",
+        "options": {}
+      },
+      "id": "2c76075f-7f3f-45d7-999d-a15f3c04c431",
+      "name": "WhatsApp Follow-up",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        864,
+        928
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "days"
+      },
+      "id": "a70b3b76-c48f-4618-aa1b-4f52aaef28a7",
+      "name": "Wait 3 Days",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1072,
+        928
+      ],
+      "webhookId": "wait-3-days-webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v18.0/1115720234957320/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"assistantId\": \"8cbd6702-8420-4848-b57d-27fee3815f42\",\n  \"phoneNumberId\": \"2b6689bc-7612-4da2-bf7d-fa8d7ed6ee3e\",\n  \"customer\": {\n    \"number\": \"={{ $('Merge Analysis').item.json.phone }}\",\n    \"name\": \"={{ $('Merge Analysis').item.json.client_name }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "9f7cec7a-5706-4518-ab13-5bbcd23fcdc4",
+      "name": "VAPI Outbound Follow-up Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1344,
+        928
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "kmEgbBmy35Ol2fm6",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        192,
+        800
+      ],
+      "id": "a6512294-55c0-4b12-b246-1e5d5e6c8431",
+      "name": "Wait",
+      "webhookId": "ac2dfa89-8a6e-4744-9c1d-5be19690501c"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "VAPI Function Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse VAPI Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse VAPI Request": {
+      "main": [
+        [
+          {
+            "node": "Route Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Function": {
+      "main": [
+        [
+          {
+            "node": "Search Properties",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Client",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Book Viewing in Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Properties": {
+      "main": [
+        [
+          {
+            "node": "Format Property Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Client": {
+      "main": [
+        [
+          {
+            "node": "Format Client Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Book Viewing in Calendar": {
+      "main": [
+        [
+          {
+            "node": "Format Booking Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Property Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to VAPI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Client Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to VAPI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Booking Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to VAPI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VAPI End-Call Webhook": {
+      "main": [
+        [
+          {
+            "node": "Filter End Call Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter End Call Report": {
+      "main": [
+        [
+          {
+            "node": "Extract Call Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Call Data": {
+      "main": [
+        [
+          {
+            "node": "GPT Lead Analysis (OpenRouter)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT Lead Analysis (OpenRouter)": {
+      "main": [
+        [
+          {
+            "node": "Merge Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Analysis": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to CRM Sheet": {
+      "main": [
+        [
+          {
+            "node": "Is Hot Lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Hot Lead?": {
+      "main": [
+        [
+          {
+            "node": "Telegram Hot Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "WhatsApp Follow-up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Follow-up": {
+      "main": [
+        [
+          {
+            "node": "Wait 3 Days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 3 Days": {
+      "main": [
+        [
+          {
+            "node": "VAPI Outbound Follow-up Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Save to CRM Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}
